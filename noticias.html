@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Notícias</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container my-5">
+    <h1 class="text-center mb-4">Lista de Notícias</h1>
+    
+    <!-- Ordenação -->
+    <div class="form-group">
+      <label for="sortSelect">Ordenar por:</label>
+      <select id="sortSelect" class="form-control w-25" onchange="sortNews()">
+        <option value="date">Data</option>
+        <option value="relevance">Relevância</option>
+      </select>
+    </div>
+
+    <!-- Lista de Notícias -->
+    <div id="newsList" class="row">
+      <!-- As notícias serão carregadas aqui dinamicamente -->
+    </div>
+  </div>
+
+  <script>
+    // Função para buscar e exibir as notícias
+    async function fetchNews() {
+      const response = await fetch('https://raw.githubusercontent.com/leonelbr/ainews/refs/heads/main/noticias.json');
+      const news = await response.json();
+      displayNews(news);
+    }
+
+    // Função para exibir as notícias no DOM
+    function displayNews(newsArray) {
+      const newsList = document.getElementById('newsList');
+      newsList.innerHTML = ''; // Limpa a lista antes de renderizar
+
+      newsArray.forEach(noticia => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-3';
+
+        col.innerHTML = `
+          <div class="card h-100">
+            <img src="${noticia.Link_img}" class="card-img-top" alt="Imagem da notícia">
+            <div class="card-body">
+              <h5 class="card-title">${noticia.Manchete}</h5>
+              <p class="card-text">${noticia.Site}</p>
+              <p><strong>Data:</strong> ${new Date(noticia.Data).toLocaleDateString()}</p>
+              <p><strong>Relevância:</strong> ${noticia.Relevancia}</p>
+              <a href="${noticia.Link}" target="_blank" class="btn btn-primary">Leia mais</a>
+            </div>
+          </div>
+        `;
+
+        newsList.appendChild(col);
+      });
+    }
+
+    // Função para ordenar as notícias
+    function sortNews() {
+      const sortType = document.getElementById('sortSelect').value;
+      const newsList = Array.from(document.querySelectorAll('#newsList .col-md-4'));
+      
+      // Converter o NodeList para um array de objetos com os dados
+      const newsArray = newsList.map(news => {
+        const title = news.querySelector('.card-title').innerText;
+        const site = news.querySelector('.card-text').innerText;
+        const dateText = news.querySelector('.card p:nth-of-type(2)').innerText.replace('Data: ', '');
+        const relevance = parseInt(news.querySelector('.card p:nth-of-type(3)').innerText.replace('Relevância: ', ''));
+        const link = news.querySelector('a').href;
+        const imgSrc = news.querySelector('img').src;
+
+        return {
+          element: news,
+          Manchete: title,
+          Site: site,
+          Data: new Date(dateText),
+          Relevancia: relevance,
+          Link: link,
+          Link_img: imgSrc
+        };
+      });
+
+      // Ordenar pelo tipo selecionado
+      if (sortType === 'date') {
+        newsArray.sort((a, b) => new Date(b.Data) - new Date(a.Data));
+      } else if (sortType === 'relevance') {
+        newsArray.sort((a, b) => b.Relevancia - a.Relevancia);
+      }
+
+      // Atualizar a lista exibida
+      displayNews(newsArray.map(item => ({
+        Manchete: item.Manchete,
+        Site: item.Site,
+        Data: item.Data,
+        Relevancia: item.Relevancia,
+        Link: item.Link,
+        Link_img: item.Link_img
+      })));
+    }
+
+    // Carregar as notícias ao iniciar a página
+    fetchNews();
+  </script>
+</body>
+</html>
