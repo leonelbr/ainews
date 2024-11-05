@@ -28,9 +28,16 @@
   <script>
     // Função para buscar e exibir as notícias
     async function fetchNews() {
-      const response = await fetch('https://raw.githubusercontent.com/leonelbr/ainews/refs/heads/main/noticias.json');
-      const news = await response.json();
-      displayNews(news);
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/leonelbr/ainews/refs/heads/main/noticias.json');
+        const news = await response.json();
+
+        // Verifique se `news` é um array; se não, converta para array
+        const newsArray = Array.isArray(news) ? news : Object.values(news);
+        displayNews(newsArray);
+      } catch (error) {
+        console.error("Erro ao buscar as notícias:", error);
+      }
     }
 
     // Função para exibir as notícias no DOM
